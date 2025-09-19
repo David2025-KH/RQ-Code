@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QR Code for Dashboard</title>
+    <style>
+        /* Basic styling for the body to center content */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            height: 100vh;
+            text-align: center;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars if content slightly exceeds viewport */
+        }
+
+        /* Styling for the main heading */
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Wrapper for the QR code and logo to allow positioning */
+        #qrcode-wrapper {
+            position: relative;
+            width: 256px; /* Fixed width for the QR code */
+            height: 256px; /* Fixed height for the QR code */
+            margin-bottom: 20px;
+            /* Add some subtle shadow for better visual separation */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px; /* Rounded corners for the wrapper */
+            overflow: hidden; /* Ensures logo doesn't spill out if it's too big */
+        }
+
+        /* Styling for the QR code container */
+        #qrcode {
+            width: 100%;
+            height: 100%;
+            display: flex; /* Use flexbox to ensure QR code image is centered if generated as such */
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Styling for the logo image overlaid on the QR code */
+        #qrcode-wrapper img.logo {
+            position: absolute;
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            width: 64px; /* Size of the logo */
+            height: 64px; /* Size of the logo */
+            transform: translate(-50%, -50%); /* Adjust for true centering */
+            border-radius: 10px; /* Rounded corners for the logo */
+            box-shadow: 0 0 0 5px white; /* White border for contrast against QR code */
+            z-index: 10; /* Ensure logo is on top of the QR code */
+            object-fit: contain; /* Ensures the entire logo is visible within its bounds */
+        }
+
+        /* Styling for the download button */
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            background-color: #28a745; /* Green background */
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+        }
+
+        button:hover {
+            background-color: #218838; /* Darker green on hover */
+            transform: translateY(-2px); /* Slight lift effect on hover */
+        }
+
+        button:active {
+            background-color: #1e7e34; /* Even darker green on click */
+            transform: translateY(0); /* Return to original position on click */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 400px) {
+            #qrcode-wrapper {
+                width: 200px;
+                height: 200px;
+            }
+            #qrcode-wrapper img.logo {
+                width: 50px;
+                height: 50px;
+            }
+            /* Adjust logo position for smaller QR code if needed, though 50% should still center it */
+            /* The 96,96 coordinates in JS will need adjustment if QR code size changes significantly */
+        }
+    </style>
+</head>
+<body>
+    <h1>Scan to Open Dashboard</h1>
+    <div id="qrcode-wrapper">
+        <div id="qrcode"></div>
+        <!-- IMPORTANT: Ensure 'src' attribute points to your logo file (e.g., logo.png) -->
+        <img class="logo" src="logo.png" alt="Your Logo" />
+    </div>
+    <button onclick="downloadQRCode()">Download QR Code</button>
+
+    <!-- QRCode.js Library for generating QR codes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // The URL or text to be encoded in the QR code
+        const qrText = "https://david2025-kh.github.io/Air-Quality-Dashboard/";
+        // Get the container element for the QR code
+        const qrContainer = document.getElementById("qrcode");
+
+        // Initialize QRCode.js to generate the QR code
+        // CorrectLevel.H (High) is used to allow for more error correction,
+        // which is good when you overlay a logo as it covers part of the code.
+        new QRCode(qrContainer, {
+            text: qrText,
+            width: 256,
+            height: 256,
+            colorDark: "#000000", // Color of the QR code modules
+            colorLight: "#ffffff", // Color of the background
+            correctLevel: QRCode.CorrectLevel.H // Error correction level
+        });
+
+        /**
+         * Function to download the combined QR code and logo image.
+         * It creates a temporary canvas, draws the QR code, then draws the logo on top,
+         * and finally triggers a download of the combined image.
+         */
+        function downloadQRCode() {
+            // Get the image element generated by QRCode.js
+            const qrImg = document.querySelector("#qrcode img");
+
+            // Check if the QR code image has been generated
+            if (qrImg) {
+                // Create a new off-screen canvas to draw the combined image
+                const canvas = document.createElement("canvas");
+                // Set canvas dimensions to match the QR code
+                canvas.width = 256;
+                canvas.height = 256;
+                // Get the 2D rendering context for the canvas
+                const ctx = canvas.getContext("2d");
+
+                // Create a new Image object for the QR code
+                const qrCodeImage = new Image();
+                // Set crossOrigin to "anonymous" to prevent CORS issues when drawing images from different origins
+                qrCodeImage.crossOrigin = "anonymous";
+                qrCodeImage.src = qrImg.src; // Source is the data URL of the generated QR code
+
+                // When the QR code image is loaded
+                qrCodeImage.onload = function () {
+                    // Draw the QR code image onto the canvas
+                    ctx.drawImage(qrCodeImage, 0, 0, 256, 256);
+
+                    // Get the logo image element from the HTML
+                    const logoElement = document.querySelector("#qrcode-wrapper img.logo");
+                    // Create a new Image object for the logo
+                    const logoImage = new Image();
+                    logoImage.crossOrigin = "anonymous"; // Important for drawing images from different origins
+                    logoImage.src = logoElement.src; // Source is the path to your logo (e.g., logo.png)
+
+                    // When the logo image is loaded
+                    logoImage.onload = function () {
+                        // Calculate logo position and size for drawing on canvas
+                        // QR code is 256x256. Logo is 64x64.
+                        // To center a 64x64 logo: (256 - 64) / 2 = 192 / 2 = 96
+                        const logoSize = 64;
+                        const logoX = (canvas.width - logoSize) / 2;
+                        const logoY = (canvas.height - logoSize) / 2;
+
+                        // Draw the logo image onto the canvas, centered
+                        ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
+
+                        // Create a temporary anchor element to trigger the download
+                        const link = document.createElement("a");
+                        // Set the href to the canvas content as a data URL (PNG format)
+                        link.href = canvas.toDataURL("image/png");
+                        // Set the download filename
+                        link.download = "dashboard_qr_code_with_logo.png";
+                        // Append the link to the body (necessary for .click() to work in some browsers)
+                        document.body.appendChild(link);
+                        // Programmatically click the link to trigger download
+                        link.click();
+                        // Remove the temporary link from the body
+                        document.body.removeChild(link);
+                    };
+
+                    // Handle potential errors if the logo image fails to load
+                    logoImage.onerror = () => {
+                        console.error("Error loading logo image. Please check the path and file.");
+                        // Fallback: download QR code without logo if logo fails to load
+                        const link = document.createElement("a");
+                        link.href = canvas.toDataURL("image/png");
+                        link.download = "dashboard_qr_code_no_logo.png";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        // Use a custom message box instead of alert()
+                        displayMessageBox("Error: Logo failed to load. QR code downloaded without logo.");
+                    };
+                };
+
+                // Handle potential errors if the QR code image fails to load
+                qrCodeImage.onerror = () => {
+                    console.error("Error loading QR code image.");
+                    // Use a custom message box instead of alert()
+                    displayMessageBox("Error: QR code image failed to load.");
+                };
+            } else {
+                // If QR code image is not found, display a message
+                // Use a custom message box instead of alert()
+                displayMessageBox("QR code not generated yet. Please wait a moment.");
+            }
+        }
+
+        /**
+         * Simple custom message box function to replace alert().
+         * For a real application, you'd want a more robust modal or notification system.
+         */
+        function displayMessageBox(message) {
+            const messageBox = document.createElement('div');
+            messageBox.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: #333;
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                z-index: 1000;
+                font-family: Arial, sans-serif;
+                text-align: center;
+            `;
+            messageBox.textContent = message;
+            document.body.appendChild(messageBox);
+
+            setTimeout(() => {
+                document.body.removeChild(messageBox);
+            }, 3000); // Message disappears after 3 seconds
+        }
+    </script>
+</body>
+</html>
